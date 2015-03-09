@@ -1,6 +1,11 @@
 package gwo
 
-import "math"
+import (
+	"../interval"
+	"math"
+	"math/rand"
+	"time"
+)
 
 type Function func([]float64) float64
 
@@ -8,7 +13,7 @@ type Wolf struct {
 	coordinates []float64
 }
 
-func (wolf *Wolf) ToSpace(intervals *[]Interval) {
+func (wolf *Wolf) rebirth(intervals *[]interval.Interval) {
 	for i := range wolf.coordinates {
 		if !(*intervals)[i].IsIn(wolf.coordinates[i]) {
 			wolf.coordinates[i] = (*intervals)[i].NextRand()
@@ -17,12 +22,12 @@ func (wolf *Wolf) ToSpace(intervals *[]Interval) {
 }
 
 type GWO struct {
-	bounds     []Interval
+	bounds     []interval.Interval
 	iterations uint
 	wolfs      []Wolf
 }
 
-func NewGWO(bounds []Interval, noWolfs uint, noIterations uint) *GWO {
+func New(bounds []interval.Interval, noWolfs uint, noIterations uint) *GWO {
 	wolfs := make([]Wolf, noWolfs)
 
 	for i := range wolfs {
@@ -31,7 +36,7 @@ func NewGWO(bounds []Interval, noWolfs uint, noIterations uint) *GWO {
 			coordinates[c] = bounds[c].NextRand()
 		}
 		wolfs[i].coordinates = coordinates
-		wolfs[i].ToSpace(&bounds)
+		wolfs[i].rebirth(&bounds)
 	}
 
 	gwo := GWO{bounds, noIterations, wolfs}
@@ -47,6 +52,7 @@ func (gwo *GWO) Max(function Function) float64 {
 }
 
 func (gwo *GWO) optimize(function Function, inf float64) float64 {
+	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
 	iterations := gwo.iterations
 
 	alphaWolf := Wolf{make([]float64, len(gwo.bounds))}
@@ -60,7 +66,7 @@ func (gwo *GWO) optimize(function Function, inf float64) float64 {
 	for iteration := uint(0); iteration < iterations; iteration++ {
 		for i := range gwo.wolfs {
 			wolf := &gwo.wolfs[i]
-			wolf.ToSpace(&gwo.bounds)
+			wolf.rebirth(&gwo.bounds)
 
 			fitness := function(wolf.coordinates)
 
@@ -85,8 +91,6 @@ func (gwo *GWO) optimize(function Function, inf float64) float64 {
 		for i := range gwo.wolfs {
 			wolf := &gwo.wolfs[i]
 			for j := range wolf.coordinates {
-				rand := gwo.bounds[j].rand
-
 				aX, aY := 2.0*coefficient*rand.Float64()-1.0, 2.0*rand.Float64()
 				dAlpha := math.Abs(aY*alphaWolf.coordinates[j] - wolf.coordinates[j])
 				x1 := alphaWolf.coordinates[j] - aX*dAlpha

@@ -1,9 +1,9 @@
-package gwo
+package interval
 
 import "testing"
 
 func TestNextRand(t *testing.T) {
-	interval := NewInterval(1, 3)
+	interval := New(1, 3)
 	var rand float64
 	for i := 0; i <= 1000; i++ {
 		rand = interval.NextRand()

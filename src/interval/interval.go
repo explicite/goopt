@@ -1,4 +1,4 @@
-package gwo
+package interval
 
 import (
 	"math/rand"
@@ -10,7 +10,7 @@ type Interval struct {
 	rand     *rand.Rand
 }
 
-func NewInterval(min, max float64) *Interval {
+func New(min, max float64) *Interval {
 	if min > max {
 		return nil
 	}
